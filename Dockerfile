@@ -1,19 +1,13 @@
 # ------------------------------------------------------------------------------
-# Based on a work at https://github.com/docker/docker.
+# Based on the work at https://github.com/kdelfour/cloud9-docker.
 # ------------------------------------------------------------------------------
 # Pull base image.
-FROM kdelfour/supervisor-docker
-MAINTAINER Kevin Delfour <kevin@delfour.eu>
+FROM rafaelsoares/archlinux
+MAINTAINER Aidan Harris <mail@aidanharris.io>
 
 # ------------------------------------------------------------------------------
 # Install base
-RUN apt-get update
-RUN apt-get install -y build-essential g++ curl libssl-dev apache2-utils git libxml2-dev sshfs
-
-# ------------------------------------------------------------------------------
-# Install Node.js
-RUN curl -sL https://deb.nodesource.com/setup | bash -
-RUN apt-get install -y nodejs
+RUN pacman -S --needed --noconfirm base base-devel git nodejs npm tmux supervisor libxml2 sshfs apr-util curl wget
     
 # ------------------------------------------------------------------------------
 # Install Cloud9
@@ -25,16 +19,12 @@ RUN scripts/install-sdk.sh
 RUN sed -i -e 's_127.0.0.1_0.0.0.0_g' /cloud9/configs/standalone.js 
 
 # Add supervisord conf
-ADD conf/cloud9.conf /etc/supervisor/conf.d/
+ADD conf/cloud9.ini /etc/supervisor.d/
 
 # ------------------------------------------------------------------------------
 # Add volumes
 RUN mkdir /workspace
 VOLUME /workspace
-
-# ------------------------------------------------------------------------------
-# Clean up APT when done.
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # ------------------------------------------------------------------------------
 # Expose ports.
@@ -43,4 +33,4 @@ EXPOSE 3000
 
 # ------------------------------------------------------------------------------
 # Start supervisor, define default command.
-CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+CMD ["supervisord", "-n", "-c", "/etc/supervisord.conf"]
